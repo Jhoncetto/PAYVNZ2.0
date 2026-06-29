@@ -1,0 +1,6 @@
+{
+  "name": "Ayuda Humanitaria Venezuela",
+  "description": "Plataforma de recaudación de fondos y donaciones para ayuda humanitaria en Venezuela, diseñada para canalizar alimentos, medicinas y soporte integral.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
