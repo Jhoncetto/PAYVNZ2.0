@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { jsPDF } from 'jspdf';
+import confetti from 'canvas-confetti';
 import { 
   Heart, 
   HeartHandshake, 
@@ -131,7 +133,7 @@ export default function App() {
     lastName: '',
     email: '',
     phone: '',
-    paymentMethod: 'card' as 'card' | 'qrexpress' | 'crypto',
+    paymentMethod: 'qrexpress' as 'card' | 'qrexpress' | 'crypto',
     cardHolder: '',
     cardNumber: '',
     cardExpiry: '',
@@ -170,24 +172,48 @@ export default function App() {
     }
   }, [darkMode]);
 
-  // Cargar ePayco de manera dinámica cuando se selecciona tarjeta y se está en el paso de pago (paso 3)
+  // Disparar confeti tricolor venezolano cuando se completa exitosamente la donación (Paso 4)
   useEffect(() => {
-    if (currentStep === 3 && personalData.paymentMethod === 'card') {
-      const timer = setTimeout(() => {
-        const container = document.getElementById('miepayco');
-        if (container) {
-          container.innerHTML = '';
-          const script = document.createElement('script');
-          script.src = 'https://mi-epayco.s3.amazonaws.com/embed.js';
-          script.defer = true;
-          script.type = 'text/javascript';
-          script.setAttribute('miepaycoUrl', 'https://donacionvnz2026.epayco.me/');
-          container.appendChild(script);
-        }
-      }, 150);
-      return () => clearTimeout(timer);
+    if (currentStep === 4) {
+      const colors = ['#F7D117', '#003893', '#CF142B', '#10B981', '#3B82F6'];
+      
+      // Primera ráfaga desde el centro
+      confetti({
+        particleCount: 140,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: colors,
+        ticks: 250
+      });
+
+      // Segunda ráfaga lateral izquierda
+      const t1 = setTimeout(() => {
+        confetti({
+          particleCount: 70,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0, y: 0.75 },
+          colors: colors
+        });
+      }, 250);
+
+      // Tercera ráfaga lateral derecha
+      const t2 = setTimeout(() => {
+        confetti({
+          particleCount: 70,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1, y: 0.75 },
+          colors: colors
+        });
+      }, 450);
+
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
     }
-  }, [personalData.paymentMethod, currentStep]);
+  }, [currentStep]);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -338,7 +364,20 @@ export default function App() {
         setFormErrors('Por favor, confirma que completaste la transferencia y marcaste la casilla de confirmación antes de continuar.');
         return;
       }
-      // Simulación exitosa
+      // Simulación exitosa - Cambia la URL de forma interactiva a pago exitoso
+      window.history.pushState({ step: 4 }, '', '?pago=exitoso');
+      if (typeof window !== 'undefined' && (window as any).gtag) {
+        try {
+          (window as any).gtag('event', 'conversion', {
+            'send_to': 'AW-18287330924',
+            'value': activeAmount,
+            'currency': 'USD',
+            'transaction_id': `EA-${Date.now()}`
+          });
+        } catch (e) {
+          console.error("Error al registrar evento gtag:", e);
+        }
+      }
       setCurrentStep(4);
     }
   };
@@ -362,6 +401,8 @@ export default function App() {
   };
 
   const resetDonation = () => {
+    // Restaurar la URL limpia original al reiniciar la donación
+    window.history.pushState({}, '', window.location.pathname);
     setCurrentStep(1);
     setSelectedAmount(25);
     setCustomAmount('');
@@ -373,7 +414,7 @@ export default function App() {
       lastName: '',
       email: '',
       phone: '',
-      paymentMethod: 'card',
+      paymentMethod: 'qrexpress',
       cardHolder: '',
       cardNumber: '',
       cardExpiry: '',
@@ -389,32 +430,172 @@ export default function App() {
       setDownloadingCertificate(false);
       setCertificateDownloaded(true);
       
-      // Simulate triggers an actual mock text file download to prove system is interactive
-      const element = document.createElement("a");
-      const file = new Blob([
-        `==================================================\n` +
-        `   CERTIFICADO DE RESPUESTA HUMANITARIA - SISMO    \n` +
-        `            ESPERANZA ACTIVA VENEZUELA            \n` +
-        `==================================================\n\n` +
-        `Otorgado con profunda gratitud a:\n` +
-        `   ${personalData.firstName} ${personalData.lastName || ''}\n\n` +
-        `Por sembrar una semilla de vida y socorrer de inmediato\n` +
-        `mediante su donación de $${activeAmount} USD destinada a proveer\n` +
-        `auxilio médico de trauma, mantas térmicas, agua potable y kits de\n` +
-        `refugio de emergencia a las familias damnificadas por el terremoto\n` +
-        `en Venezuela.\n\n` +
-        `--------------------------------------------------\n` +
-        `Fecha de Emisión: ${new Date().toLocaleDateString()}\n` +
-        `Código de Validación: EA-SISMO-CERT-${Math.floor(100000 + Math.random() * 900000)}\n` +
-        `Esperanza Activa Foundation • Caracas - Mérida - Táchira\n` +
-        `==================================================\n`
-      ], {type: 'text/plain'});
-      element.href = URL.createObjectURL(file);
-      element.download = `Certificado_Esperanza_Activa_${personalData.firstName}.txt`;
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-    }, 2000);
+      try {
+        // Inicializar jsPDF (formato A4 estándar en vertical)
+        const doc = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+
+        // 1. Dibujar Marco Elegante Doble (Estilo Diploma)
+        doc.setDrawColor(207, 20, 43); // Rojo marca
+        doc.setLineWidth(1);
+        doc.rect(8, 8, pageWidth - 16, pageHeight - 16);
+
+        doc.setDrawColor(0, 56, 147); // Azul marca (#003893)
+        doc.setLineWidth(0.3);
+        doc.rect(10, 10, pageWidth - 20, pageHeight - 20);
+
+        // 2. Esquinas decorativas
+        doc.setDrawColor(247, 209, 23); // Amarillo/Oro (#F7D117)
+        doc.setLineWidth(1.5);
+        // Superior Izquierda
+        doc.line(7, 7, 18, 7);
+        doc.line(7, 7, 7, 18);
+        // Superior Derecha
+        doc.line(pageWidth - 7, 7, pageWidth - 18, 7);
+        doc.line(pageWidth - 7, 7, pageWidth - 7, 18);
+        // Inferior Izquierda
+        doc.line(7, pageHeight - 7, 18, pageHeight - 7);
+        doc.line(7, pageHeight - 7, 7, pageHeight - 18);
+        // Inferior Derecha
+        doc.line(pageWidth - 7, pageHeight - 7, pageWidth - 18, pageHeight - 7);
+        doc.line(pageWidth - 7, pageHeight - 7, pageWidth - 7, pageHeight - 18);
+
+        // 3. Encabezado de la Fundación
+        doc.setTextColor(0, 56, 147); // Azul
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(22);
+        doc.text('ESPERANZA ACTIVA', pageWidth / 2, 35, { align: 'center' });
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.setTextColor(100, 116, 139); // Slate-500
+        doc.text('FUNDACIÓN DE RESPUESTA HUMANITARIA Y AUXILIO EN EMERGENCIAS', pageWidth / 2, 41, { align: 'center' });
+
+        // Línea divisora tricolor (Bandera de Venezuela)
+        const lineY = 46;
+        const barWidth = 40;
+        doc.setLineWidth(1.5);
+        doc.setDrawColor(247, 209, 23); // Amarillo
+        doc.line(pageWidth / 2 - barWidth, lineY, pageWidth / 2 - barWidth / 3, lineY);
+        doc.setDrawColor(0, 56, 147); // Azul
+        doc.line(pageWidth / 2 - barWidth / 3, lineY, pageWidth / 2 + barWidth / 3, lineY);
+        doc.setDrawColor(207, 20, 43); // Rojo
+        doc.line(pageWidth / 2 + barWidth / 3, lineY, pageWidth / 2 + barWidth, lineY);
+
+        // 4. Título del Diploma
+        doc.setTextColor(207, 20, 43); // Rojo
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(24);
+        doc.text('CERTIFICADO DE AGRADECIMIENTO', pageWidth / 2, 65, { align: 'center' });
+
+        doc.setTextColor(51, 65, 85); // Slate-700
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(13);
+        doc.text('Otorgado con profunda gratitud y reconocimiento a:', pageWidth / 2, 80, { align: 'center' });
+
+        // 5. Nombre del Donante
+        const fullName = `${personalData.firstName} ${personalData.lastName || ''}`.trim().toUpperCase();
+        doc.setTextColor(0, 56, 147); // Azul
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(26);
+        doc.text(fullName, pageWidth / 2, 98, { align: 'center' });
+
+        // Línea sutil bajo el nombre
+        doc.setLineWidth(0.5);
+        doc.setDrawColor(226, 232, 240); // Slate-200
+        doc.line(40, 104, pageWidth - 40, 104);
+
+        // 6. Texto de Mérito
+        doc.setTextColor(71, 85, 105); // Slate-600
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
+        
+        const descriptionText = 
+          `Por su invaluable aporte humanitario y solidaridad de $${activeAmount} USD destinado a ` +
+          `proveer auxilio médico de trauma, mantas térmicas, agua potable, alimentos y kits de ` +
+          `refugio de emergencia a las familias damnificadas por el terremoto en Venezuela.\n\n` +
+          `Su oportuna y generosa acción siembra una semilla de vida y esperanza en medio de la adversidad, ` +
+          `permitiendo que nuestros equipos de Cruz Verde sigan rescatando y resguardando vidas en el campo.`;
+
+        const splitDescription = doc.splitTextToSize(descriptionText, pageWidth - 50);
+        doc.text(splitDescription, pageWidth / 2, 116, { align: 'center', lineHeightFactor: 1.5 });
+
+        // 7. Sello decorativo vectorizado (Corazón y Círculos concéntricos en Oro)
+        const sealX = pageWidth / 2;
+        const sealY = 185;
+        doc.setDrawColor(247, 209, 23); // Oro
+        doc.setLineWidth(0.5);
+        doc.circle(sealX, sealY, 14); // Círculo exterior
+        doc.setLineWidth(0.2);
+        doc.circle(sealX, sealY, 12); // Círculo interior
+        
+        // Estrellitas decorativas alrededor del sello (Venezuela)
+        doc.setFontSize(16);
+        doc.setTextColor(247, 209, 23);
+        doc.text('★', sealX - 1.5, sealY + 2.5); // Estrella central
+
+        // 8. Firmas
+        const sigY = 230;
+        doc.setLineWidth(0.5);
+        doc.setDrawColor(203, 213, 225); // Slate-300
+        
+        // Firma Izquierda
+        doc.line(35, sigY, 95, sigY);
+        doc.setTextColor(51, 65, 85);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text('Dr. Alejandro Moreno', 65, sigY + 5, { align: 'center' });
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(100, 116, 139);
+        doc.text('Director de Emergencias', 65, sigY + 9, { align: 'center' });
+        doc.text('Esperanza Activa', 65, sigY + 13, { align: 'center' });
+
+        // Firma Derecha
+        doc.line(pageWidth - 95, sigY, pageWidth - 35, sigY);
+        doc.setTextColor(51, 65, 85);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text('Lcda. Elena Restrepo', pageWidth - 65, sigY + 5, { align: 'center' });
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(100, 116, 139);
+        doc.text('Coordinadora de Campo', pageWidth - 65, sigY + 9, { align: 'center' });
+        doc.text('Comité de Cruz Verde', pageWidth - 65, sigY + 13, { align: 'center' });
+
+        // 9. Pie de página con código de verificación
+        const valCode = `EA-SISMO-CERT-${Math.floor(100000 + Math.random() * 900000)}`;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184); // Slate-400
+        doc.text(`CÓDIGO DE VALIDACIÓN: ${valCode}`, 15, pageHeight - 14);
+        
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Fecha de Emisión: ${new Date().toLocaleDateString()}`, pageWidth - 15, pageHeight - 14, { align: 'right' });
+
+        doc.setFontSize(7);
+        doc.text('Este es un certificado de agradecimiento oficial emitido por Esperanza Activa Foundation para registrar la solidaridad humanitaria.', pageWidth / 2, pageHeight - 9, { align: 'center' });
+
+        // Guardar el PDF
+        doc.save(`Certificado_Esperanza_Activa_${personalData.firstName.replace(/\s+/g, '_')}.pdf`);
+      } catch (error) {
+        console.error("Error al generar PDF:", error);
+        // Fallback simple si jspdf falla por alguna razón
+        const element = document.createElement("a");
+        const file = new Blob([`Certificado de Esperanza Activa para ${personalData.firstName} por $${activeAmount} USD. Código de Validación: EA-SISMO-CERT`], {type: 'text/plain'});
+        element.href = URL.createObjectURL(file);
+        element.download = `Certificado_Esperanza_Activa_${personalData.firstName}.txt`;
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+      }
+    }, 1200);
   };
 
   return (
@@ -889,15 +1070,15 @@ export default function App() {
                               onClick={() => setPersonalData({ ...personalData, paymentMethod: 'card' })}
                               className={`py-3 px-3 rounded-2xl font-bold text-xs border transition-all duration-300 flex flex-col items-center justify-center gap-1.5 cursor-pointer relative overflow-hidden ${
                                 personalData.paymentMethod === 'card'
-                                  ? 'border-[#003893] bg-[#003893]/5 dark:bg-[#003893]/15 text-[#003893] dark:text-blue-300 ring-2 ring-[#003893]/10 dark:ring-blue-500/20'
+                                  ? 'border-amber-500 bg-amber-500/5 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-2 ring-amber-500/10'
                                   : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900'
                               }`}
                             >
-                              <div className="absolute -top-1 -right-1 bg-emerald-500 text-white font-black px-1.5 py-0.5 rounded-bl-md text-[8px] uppercase tracking-widest scale-90 origin-top-right animate-pulse">
-                                Activo
+                              <div className="absolute -top-1 -right-1 bg-amber-500 text-slate-950 font-extrabold px-1.5 py-0.5 rounded-bl-md text-[8px] uppercase tracking-widest scale-90 origin-top-right">
+                                Mantenimiento
                               </div>
-                              <CreditCard className="w-5 h-5 text-[#003893] dark:text-blue-400" />
-                              <span className="text-center">Tarjeta / PSE / ePayco</span>
+                              <CreditCard className="w-5 h-5 text-amber-500 dark:text-amber-400" />
+                              <span className="text-center">Tarjeta de Crédito / PSE</span>
                             </button>
 
                             <button
@@ -933,62 +1114,50 @@ export default function App() {
                           {/* Contenedor del Formulario o QR */}
                           <div className="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-100 min-h-[220px] transition-all duration-300">
                             
-                            {/* OPCIÓN A: PASARELA EPAYCO Y TRANSFERENCIA DIRECTA */}
+                            {/* OPCIÓN A: PAGO CON TARJETA Y TRANSFERENCIA DIRECTA */}
                             {personalData.paymentMethod === 'card' && (
                               <div className="space-y-4 animate-fadeIn">
-                                {/* Pasarela de Pagos Activa ePayco */}
-                                <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-blue-100 dark:border-slate-800 shadow-sm text-center space-y-3">
+                                {/* Pasarela de Pagos Tarjeta */}
+                                <div className="p-5 bg-amber-50/40 dark:bg-amber-950/10 rounded-2xl border border-amber-200/50 dark:border-amber-900/30 text-center space-y-3.5 shadow-sm">
                                   <div className="flex items-center justify-center gap-1.5">
-                                    <span className="font-extrabold text-[#1565C0] dark:text-blue-400 text-xs uppercase tracking-widest">Pasarela Segura con ePayco</span>
-                                    <span className="px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 text-[9px] font-extrabold uppercase tracking-widest animate-pulse">Activo</span>
+                                    <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                                    <span className="font-extrabold text-amber-800 dark:text-amber-400 text-xs uppercase tracking-widest">Pasarela Temporalmente Inactiva</span>
                                   </div>
-                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal max-w-sm mx-auto">
-                                    Utiliza nuestra pasarela integrada segura para aportar de forma directa usando **Tarjetas de Crédito, Débito o PSE** a través de ePayco.
-                                  </p>
                                   
-                                  {/* Botón / Contenedor oficial de ePayco */}
-                                  <div className="flex flex-col items-center justify-center gap-3 py-1">
-                                    <div id="miepayco" className="w-full max-w-[280px] flex justify-center min-h-[44px]">
-                                      <div className="text-slate-400 dark:text-slate-500 text-xs animate-pulse py-2">Cargando pasarela ePayco...</div>
-                                    </div>
-
-                                    {/* Botón de respaldo visible y elegante que siempre funciona */}
-                                    <a
-                                      href="https://donacionvnz2026.epayco.me/"
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="py-2.5 px-4 rounded-xl bg-[#1565C0] hover:bg-[#0D47A1] text-white text-[11px] font-extrabold flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer w-full max-w-[250px] shadow-sm hover:shadow-md"
-                                    >
-                                      <ExternalLink className="w-3.5 h-3.5" />
-                                      <span>Pagar en línea con ePayco</span>
-                                    </a>
+                                  <div className="max-w-md mx-auto space-y-2.5">
+                                    <p className="text-[12px] text-slate-600 dark:text-slate-300 leading-normal font-medium">
+                                      La opción de pago automático con <strong>Tarjeta de Crédito o PSE</strong> se encuentra temporalmente en mantenimiento por actualización del sistema.
+                                    </p>
+                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
+                                      Por favor, utiliza la opción de <strong>Transferencia Directa</strong> a nuestra cuenta corriente detallada abajo. Tu donación seguirá estando 100% protegida y podrás generar tu certificado PDF de igual manera.
+                                    </p>
                                   </div>
                                 </div>
 
                                 <div className="relative flex py-1 items-center">
-                                  <div className="flex-grow border-t border-slate-200"></div>
-                                  <span className="flex-shrink mx-3 text-[9px] text-slate-400 font-bold uppercase tracking-wider">O transferencia directa</span>
-                                  <div className="flex-grow border-t border-slate-200"></div>
+                                  <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+                                  <span className="flex-shrink mx-3 text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">Detalles de Transferencia Bancaria</span>
+                                  <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
                                 </div>
 
                                 <div className="space-y-2">
-                                  <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Datos de Cuenta Corriente para Transferencia</span>
+                                  <span className="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Datos de Cuenta Corriente para Transferencia</span>
                                   
-                                  <div className="bg-white rounded-xl border border-slate-200 overflow-hidden text-xs divide-y divide-slate-100">
+                                  <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-850 overflow-hidden text-xs divide-y divide-slate-100 dark:divide-slate-800/50">
                                     {[
                                       { label: 'Banco', value: BANK_ACCOUNT_CONFIG.bankName, copyKey: 'bank_name' },
                                       { label: 'Tipo de Cuenta', value: BANK_ACCOUNT_CONFIG.accountType, copyKey: 'bank_type' },
                                       { label: 'Número de Cuenta', value: BANK_ACCOUNT_CONFIG.accountNumber, copyKey: 'bank_number', isMono: true },
                                     ].map((item) => (
-                                      <div key={item.copyKey} className="flex justify-between items-center p-2.5 hover:bg-slate-50 transition-colors">
+                                      <div key={item.copyKey} className="flex justify-between items-center p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                                         <div className="flex flex-col">
-                                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{item.label}</span>
-                                          <span className={`font-semibold text-slate-800 ${item.isMono ? 'font-mono' : ''}`}>{item.value}</span>
+                                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">{item.label}</span>
+                                          <span className={`font-semibold text-slate-800 dark:text-slate-200 ${item.isMono ? 'font-mono' : ''}`}>{item.value}</span>
                                         </div>
                                         <button
                                           type="button"
                                           onClick={() => copyToClipboard(item.value, item.copyKey)}
-                                          className="py-1 px-2 rounded-lg border border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-[10px] font-bold text-slate-600 flex items-center gap-1 transition-all cursor-pointer shadow-sm shrink-0"
+                                          className="py-1 px-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1 transition-all cursor-pointer shadow-sm shrink-0"
                                         >
                                           <Check className={`w-3 h-3 text-emerald-600 transition-transform ${copiedText === item.copyKey ? 'scale-110' : 'scale-0'}`} />
                                           <span>{copiedText === item.copyKey ? '¡Copiado!' : 'Copiar'}</span>
@@ -999,16 +1168,16 @@ export default function App() {
                                 </div>
 
                                 {/* Confirmación de Transferencia */}
-                                <div className="border-t border-slate-200 pt-3 flex flex-col space-y-2">
-                                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Confirmación de Operación</span>
-                                  <label className="flex items-start gap-2.5 text-xs text-slate-600 font-medium cursor-pointer">
+                                <div className="border-t border-slate-200 dark:border-slate-800 pt-3 flex flex-col space-y-2">
+                                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">Confirmación de Operación</span>
+                                  <label className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-300 font-medium cursor-pointer">
                                     <input
                                       type="checkbox"
                                       checked={personalData.qrConfirmationChecked}
                                       onChange={(e) => setPersonalData({...personalData, qrConfirmationChecked: e.target.checked})}
                                       className="mt-0.5 rounded border-slate-300 text-[#003893] focus:ring-[#003893] w-4 h-4"
                                     />
-                                    <span>Ya he realizado la transferencia bancaria nacional/internacional por el monto equivalente a <strong>${activeAmount} USD</strong> a la cuenta corriente especificada.</span>
+                                    <span>Ya he realizado la transferencia bancaria por el monto equivalente a <strong>${activeAmount} USD</strong> a la cuenta corriente especificada.</span>
                                   </label>
                                 </div>
                               </div>
