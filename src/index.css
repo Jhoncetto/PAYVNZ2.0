@@ -20,3 +20,139 @@ html {
   animation: float 3s ease-in-out infinite;
 }
 
+/* =========================================================================
+   SOPORTE COMPLETO DE MODO OSCURO PARA TODA LA PÁGINA (GLOBAL OVERRIDES)
+   ========================================================================= */
+
+html.dark, html.dark body {
+  background-color: #030712 !important; /* slate-950 / gray-950 */
+  color: #f3f4f6 !important; /* gray-100 */
+}
+
+/* Secciones, Main y Divs de fondo general */
+html.dark main,
+html.dark section,
+html.dark .min-h-screen,
+html.dark .bg-\[\#FBFBFA\] {
+  background-color: #030712 !important;
+  background-image: none !important;
+}
+
+/* Fondos blancos a gris oscuro */
+html.dark .bg-white {
+  background-color: #0f172a !important; /* slate-900 */
+}
+
+/* Fondos gris claro a gris medio/oscuro */
+html.dark .bg-slate-50,
+html.dark .bg-slate-100 {
+  background-color: #1e293b !important; /* slate-800 */
+}
+
+html.dark .bg-slate-200 {
+  background-color: #334155 !important; /* slate-700 */
+}
+
+html.dark .bg-slate-50\/50 {
+  background-color: rgba(30, 41, 59, 0.4) !important;
+}
+
+html.dark .bg-slate-100\/50 {
+  background-color: rgba(30, 41, 59, 0.6) !important;
+}
+
+/* Alertas y fondos destacados */
+html.dark .bg-rose-50 {
+  background-color: #4c0519 !important; /* rose-950 */
+  color: #ffe4e6 !important;
+}
+
+html.dark .bg-amber-50 {
+  background-color: #451a03 !important; /* amber-950 */
+  color: #fef3c7 !important;
+  border-color: #78350f !important;
+}
+
+html.dark .bg-emerald-50 {
+  background-color: #064e3b !important; /* emerald-950 */
+  color: #d1fae5 !important;
+}
+
+/* Textos oscuros a claros */
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700,
+html.dark .text-gray-900,
+html.dark .text-gray-800 {
+  color: #f3f4f6 !important; /* gray-100 */
+}
+
+html.dark .text-slate-600,
+html.dark .text-slate-500,
+html.dark .text-gray-600,
+html.dark .text-gray-500 {
+  color: #cbd5e1 !important; /* slate-300 */
+}
+
+html.dark .text-slate-400,
+html.dark .text-gray-400 {
+  color: #94a3b8 !important; /* slate-400 */
+}
+
+/* Ajustes del color de marca azul (#003893) en modo oscuro para alta legibilidad */
+html.dark .text-\[\#003893\] {
+  color: #60a5fa !important; /* blue-400 */
+}
+
+html.dark .border-\[\#003893\] {
+  border-color: #3b82f6 !important;
+}
+
+html.dark .bg-\[\#003893\] {
+  background-color: #1d4ed8 !important; /* blue-700 */
+}
+
+html.dark .bg-\[\#003893\]\/5 {
+  background-color: rgba(59, 130, 246, 0.15) !important;
+}
+
+/* Bordes en modo oscuro */
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-slate-300,
+html.dark .border-gray-100,
+html.dark .border-gray-200 {
+  border-color: #334155 !important; /* slate-700 */
+}
+
+/* Campos de entrada, selects y formularios */
+html.dark input, 
+html.dark select, 
+html.dark textarea {
+  background-color: #1e293b !important; /* slate-800 */
+  color: #ffffff !important;
+  border-color: #334155 !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #64748b !important; /* slate-500 */
+}
+
+/* Accordion, cards y sombras */
+html.dark .shadow-xl,
+html.dark .shadow-lg,
+html.dark .shadow-md,
+html.dark .shadow-sm {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Mantener el diseño de la bandera venezolana en modo oscuro */
+html.dark .bg-gradient-to-r.from-\[\#F7D117\] {
+  background-image: linear-gradient(to right, #F7D117, #003893, #CF142B) !important;
+}
+
+html.dark .bg-gradient-to-tr.from-\[\#003893\] {
+  background-image: linear-gradient(to top right, #003893, #CF142B, #F7D117) !important;
+}
+

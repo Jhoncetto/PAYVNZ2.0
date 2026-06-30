@@ -27,7 +27,10 @@ import {
   Share2,
   Coins,
   AlertTriangle,
-  Building
+  Building,
+  ExternalLink,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 // Interfaces para los datos de la aplicación
@@ -63,7 +66,7 @@ interface FAQItem {
 export const QR_CONFIG = {
   paypal: {
     qrImageUrl: "./image/paypal_qr.jpg", // Carga aquí la URL de tu imagen de QR PayPal
-    accountEmail: "donaciones@esperanzaactiva.org",
+    accountEmail: "donacionesvenezuela2026@gmail.com",
     recipientName: "Esperanza Active Foundation (Emergencia Terremoto)"
   },
   nequi: {
@@ -147,6 +150,44 @@ export default function App() {
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [downloadingCertificate, setDownloadingCertificate] = useState(false);
   const [certificateDownloaded, setCertificateDownloaded] = useState(false);
+
+  // Estado para el modo oscuro
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('theme');
+      return savedTheme === 'dark';
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
+
+  // Cargar ePayco de manera dinámica cuando se selecciona tarjeta y se está en el paso de pago (paso 3)
+  useEffect(() => {
+    if (currentStep === 3 && personalData.paymentMethod === 'card') {
+      const timer = setTimeout(() => {
+        const container = document.getElementById('miepayco');
+        if (container) {
+          container.innerHTML = '';
+          const script = document.createElement('script');
+          script.src = 'https://mi-epayco.s3.amazonaws.com/embed.js';
+          script.defer = true;
+          script.type = 'text/javascript';
+          script.setAttribute('miepaycoUrl', 'https://donacionvnz2026.epayco.me/');
+          container.appendChild(script);
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [personalData.paymentMethod, currentStep]);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -377,24 +418,24 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FBFBFA] text-slate-800 font-sans flex flex-col selection:bg-rose-100 selection:text-rose-900">
+    <div className="min-h-screen bg-[#FBFBFA] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans flex flex-col selection:bg-rose-100 dark:selection:bg-rose-950 selection:text-rose-900 dark:selection:text-rose-200 transition-colors duration-300">
       
       {/* 1. HEADER (ENCABEZADO) */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-slate-100 transition-all duration-300">
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-slate-900/85 border-b border-slate-100 dark:border-slate-800 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 sm:h-20 flex items-center justify-between">
           
           {/* Logo y Nombre de Fundación */}
           <a href="#" className="flex items-center gap-2.5 group">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#003893] via-[#CF142B] to-[#F7D117] p-[2px] shadow-sm flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-              <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center">
+              <div className="w-full h-full bg-white dark:bg-slate-900 rounded-[10px] flex items-center justify-center">
                 <Heart className="w-5 h-5 text-[#CF142B] fill-[#CF142B]" />
               </div>
             </div>
             <div>
-              <span className="font-bold text-base sm:text-lg tracking-tight text-[#003893] block leading-tight">
+              <span className="font-bold text-base sm:text-lg tracking-tight text-[#003893] dark:text-white block leading-tight">
                 Esperanza Activa
               </span>
-              <span className="text-[10px] sm:text-xs text-slate-500 font-medium block">
+              <span className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium block">
                 Ayuda Humanitaria para Venezuela
               </span>
             </div>
@@ -402,70 +443,87 @@ export default function App() {
 
           {/* Menú de Navegación de Escritorio */}
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#como-ayudar" className="text-sm font-medium text-slate-600 hover:text-[#003893] transition-colors">
+            <a href="#como-ayudar" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#003893] dark:hover:text-amber-400 transition-colors">
               ¿Cómo ayuda tu donación?
             </a>
-            <a href="#impacto" className="text-sm font-medium text-slate-600 hover:text-[#003893] transition-colors">
+            <a href="#impacto" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#003893] dark:hover:text-amber-400 transition-colors">
               Nuestro Impacto
             </a>
-            <a href="#testimonios" className="text-sm font-medium text-slate-600 hover:text-[#003893] transition-colors">
+            <a href="#testimonios" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#003893] dark:hover:text-amber-400 transition-colors">
               Testimonios de campo
             </a>
-            <a href="#faq" className="text-sm font-medium text-slate-600 hover:text-[#003893] transition-colors">
+            <a href="#faq" className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#003893] dark:hover:text-amber-400 transition-colors">
               Preguntas Frecuentes
             </a>
           </nav>
 
-          {/* Botón CTA del Header */}
+          {/* Botón CTA del Header + Interruptor de Tema */}
           <div className="hidden md:flex items-center gap-4">
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-2.5 rounded-full text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-95 cursor-pointer"
+              aria-label="Cambiar tema"
+              title={darkMode ? "Activar modo claro" : "Activar modo oscuro"}
+            >
+              {darkMode ? <Sun className="w-5 h-5 text-amber-500" /> : <Moon className="w-5 h-5 text-slate-700" />}
+            </button>
             <a 
               href="#formulario-donacion"
-              className="inline-flex items-center justify-center px-5 py-2.5 rounded-full text-sm font-bold bg-[#CF142B] text-white hover:bg-[#b81024] active:scale-95 transition-all shadow-md shadow-rose-200"
+              className="inline-flex items-center justify-center px-5 py-2.5 rounded-full text-sm font-bold bg-[#CF142B] text-white hover:bg-[#b81024] active:scale-95 transition-all shadow-md shadow-rose-200 dark:shadow-none"
             >
               Donar Ahora
               <Heart className="w-4 h-4 ml-1.5 fill-current animate-pulse" />
             </a>
           </div>
 
-          {/* Botón de Menú Móvil */}
-          <button 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-slate-600 hover:text-slate-900 focus:outline-none"
-            aria-label="Abrir menú"
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          {/* Botón de Menú Móvil + Interruptor de Tema Móvil */}
+          <div className="flex items-center gap-1.5 md:hidden">
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Cambiar tema"
+            >
+              {darkMode ? <Sun className="w-5.5 h-5.5 text-amber-500" /> : <Moon className="w-5.5 h-5.5 text-slate-700" />}
+            </button>
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white focus:outline-none"
+              aria-label="Abrir menú"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
 
         {/* Menú Móvil Desplegable */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-b border-slate-100 py-4 px-6 animate-fadeIn">
+          <div className="md:hidden bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 py-4 px-6 animate-fadeIn">
             <nav className="flex flex-col gap-4">
               <a 
                 href="#como-ayudar" 
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-medium text-slate-600 hover:text-[#003893]"
+                className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#003893] dark:hover:text-amber-400"
               >
                 ¿Cómo ayuda tu donación?
               </a>
               <a 
                 href="#impacto" 
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-medium text-slate-600 hover:text-[#003893]"
+                className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#003893] dark:hover:text-amber-400"
               >
                 Nuestro Impacto
               </a>
               <a 
                 href="#testimonios" 
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-medium text-slate-600 hover:text-[#003893]"
+                className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#003893] dark:hover:text-amber-400"
               >
                 Testimonios de campo
               </a>
               <a 
                 href="#faq" 
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-sm font-medium text-slate-600 hover:text-[#003893]"
+                className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-[#003893] dark:hover:text-amber-400"
               >
                 Preguntas Frecuentes
               </a>
@@ -614,22 +672,22 @@ export default function App() {
                           
                           {/* Selector Frecuencia (Mensual vs Única) */}
                           <div>
-                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2 text-center">
+                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 text-center">
                               Frecuencia de la Ayuda
                             </label>
-                            <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-2xl">
+                            <div className="grid grid-cols-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl">
                               <button
                                 type="button"
                                 onClick={() => setDonationFrequency('monthly')}
-                                className={`py-2.5 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all duration-300 ${
+                                className={`py-2.5 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all duration-300 cursor-pointer ${
                                   donationFrequency === 'monthly'
-                                    ? 'bg-white text-[#003893] shadow-sm'
-                                    : 'text-slate-600 hover:text-slate-900'
+                                    ? 'bg-white dark:bg-slate-700 text-[#003893] dark:text-blue-300 shadow-sm'
+                                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                                 }`}
                               >
                                 <span className="flex items-center justify-center gap-1.5">
                                   Mensual
-                                  <span className="px-1.5 py-0.5 rounded-full bg-rose-100 text-[#CF142B] text-[9px] font-extrabold uppercase">
+                                  <span className="px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/60 text-[#CF142B] dark:text-rose-400 text-[9px] font-extrabold uppercase">
                                     Recomendado
                                   </span>
                                 </span>
@@ -637,10 +695,10 @@ export default function App() {
                               <button
                                 type="button"
                                 onClick={() => setDonationFrequency('once')}
-                                className={`py-2.5 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all duration-300 ${
+                                className={`py-2.5 px-4 text-xs sm:text-sm font-bold rounded-xl transition-all duration-300 cursor-pointer ${
                                   donationFrequency === 'once'
-                                    ? 'bg-white text-[#003893] shadow-sm'
-                                    : 'text-slate-600 hover:text-slate-900'
+                                    ? 'bg-white dark:bg-slate-700 text-[#003893] dark:text-blue-300 shadow-sm'
+                                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                                 }`}
                               >
                                 Única vez
@@ -650,7 +708,7 @@ export default function App() {
 
                           {/* Botones de Montos */}
                           <div>
-                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
                               Selecciona un monto de donación (USD)
                             </label>
                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -659,10 +717,10 @@ export default function App() {
                                   key={amount}
                                   type="button"
                                   onClick={() => handleAmountSelect(amount)}
-                                  className={`py-3 px-2 rounded-2xl text-center border font-bold text-lg sm:text-xl transition-all duration-300 ${
+                                  className={`py-3 px-2 rounded-2xl text-center border font-bold text-lg sm:text-xl transition-all duration-300 cursor-pointer ${
                                     selectedAmount === amount
-                                      ? 'border-[#003893] bg-[#003893]/5 text-[#003893] ring-2 ring-[#003893]/20'
-                                      : 'border-slate-200 hover:border-slate-300 bg-white text-slate-700'
+                                      ? 'border-[#003893] bg-[#003893]/5 dark:bg-[#003893]/15 text-[#003893] dark:text-blue-300 ring-2 ring-[#003893]/20'
+                                      : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200'
                                   }`}
                                 >
                                   ${amount}
@@ -673,7 +731,7 @@ export default function App() {
 
                           {/* Campo Personalizado */}
                           <div>
-                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
                               O ingresa otro monto personalizado
                             </label>
                             <div className="relative">
@@ -683,10 +741,10 @@ export default function App() {
                                 placeholder="Ej: 75"
                                 value={customAmount}
                                 onChange={handleCustomAmountChange}
-                                className={`w-full pl-8 pr-12 py-3 rounded-2xl border text-lg font-bold text-slate-800 placeholder-slate-300 focus:outline-none focus:ring-2 transition-all ${
+                                className={`w-full pl-8 pr-12 py-3 rounded-2xl border text-lg font-bold text-slate-800 dark:text-slate-100 placeholder-slate-300 dark:placeholder-slate-600 bg-white dark:bg-slate-800 focus:outline-none focus:ring-2 transition-all ${
                                   selectedAmount === 'custom' 
-                                    ? 'border-[#003893] ring-2 ring-[#003893]/20' 
-                                    : 'border-slate-200 focus:border-slate-300'
+                                    ? 'border-[#003893] ring-2 ring-[#003893]/20 dark:ring-blue-500/20' 
+                                    : 'border-slate-200 dark:border-slate-700 focus:border-slate-300 dark:focus:border-slate-600'
                                 }`}
                               />
                               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-semibold">USD</span>
@@ -694,13 +752,13 @@ export default function App() {
                           </div>
 
                           {/* Cuadro de Impacto Dinámico */}
-                          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#CF142B] block mb-1">Tu Impacto Estimado</span>
-                            <p className="text-slate-700 text-xs sm:text-sm font-medium leading-relaxed">
+                          <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-100 dark:border-slate-850">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#CF142B] dark:text-rose-400 block mb-1">Tu Impacto Estimado</span>
+                            <p className="text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
                               {getDynamicImpactMessage(activeAmount)}
                             </p>
                             {donationFrequency === 'monthly' && (
-                              <span className="block mt-2 text-[10px] font-bold text-emerald-600 uppercase bg-emerald-50 px-2 py-1 rounded w-fit">
+                              <span className="block mt-2 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase bg-emerald-50 dark:bg-emerald-950/40 px-2 py-1 rounded w-fit">
                                 ↺ Compromiso mensual de ayuda recurrente
                               </span>
                             )}
@@ -709,7 +767,7 @@ export default function App() {
                           {/* Botón Siguiente */}
                           <button
                             type="submit"
-                            className="w-full py-4 rounded-2xl bg-[#CF142B] text-white font-extrabold text-base hover:bg-[#b81024] transition-all shadow-lg shadow-rose-200 flex items-center justify-center gap-2 group cursor-pointer"
+                            className="w-full py-4 rounded-2xl bg-[#CF142B] text-white font-extrabold text-base hover:bg-[#b81024] transition-all shadow-lg shadow-rose-200 dark:shadow-none flex items-center justify-center gap-2 group cursor-pointer"
                           >
                             Continuar con ${activeAmount} {donationFrequency === 'monthly' ? '/ mes' : ''}
                             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -831,15 +889,15 @@ export default function App() {
                               onClick={() => setPersonalData({ ...personalData, paymentMethod: 'card' })}
                               className={`py-3 px-3 rounded-2xl font-bold text-xs border transition-all duration-300 flex flex-col items-center justify-center gap-1.5 cursor-pointer relative overflow-hidden ${
                                 personalData.paymentMethod === 'card'
-                                  ? 'border-[#003893] bg-[#003893]/5 text-[#003893] ring-2 ring-[#003893]/10'
-                                  : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
+                                  ? 'border-[#003893] bg-[#003893]/5 dark:bg-[#003893]/15 text-[#003893] dark:text-blue-300 ring-2 ring-[#003893]/10 dark:ring-blue-500/20'
+                                  : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900'
                               }`}
                             >
-                              <div className="absolute -top-1 -right-1 bg-amber-500 text-white font-black px-1.5 py-0.5 rounded-bl-md text-[8px] uppercase tracking-widest scale-90 origin-top-right animate-pulse">
-                                Tarjeta Off
+                              <div className="absolute -top-1 -right-1 bg-emerald-500 text-white font-black px-1.5 py-0.5 rounded-bl-md text-[8px] uppercase tracking-widest scale-90 origin-top-right animate-pulse">
+                                Activo
                               </div>
-                              <Building className="w-5 h-5 text-[#003893]" />
-                              <span className="text-center">Cuenta Corriente / Transf.</span>
+                              <CreditCard className="w-5 h-5 text-[#003893] dark:text-blue-400" />
+                              <span className="text-center">Tarjeta / PSE / ePayco</span>
                             </button>
 
                             <button
@@ -847,13 +905,13 @@ export default function App() {
                               onClick={() => setPersonalData({ ...personalData, paymentMethod: 'qrexpress' })}
                               className={`py-3 px-3 rounded-2xl font-bold text-xs border transition-all duration-300 flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
                                 personalData.paymentMethod === 'qrexpress'
-                                  ? 'border-[#CF142B] bg-[#CF142B]/5 text-[#CF142B] ring-2 ring-[#CF142B]/10'
-                                  : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
+                                  ? 'border-[#CF142B] bg-[#CF142B]/5 dark:bg-[#CF142B]/15 text-[#CF142B] dark:text-rose-400 ring-2 ring-[#CF142B]/10 dark:ring-rose-500/20'
+                                  : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900'
                               }`}
                             >
                               <div className="flex gap-1 items-center justify-center">
                                 <span className="w-2 h-2 bg-[#F7D117] rounded-full animate-ping" />
-                                <Globe className="w-5 h-5 text-slate-500" />
+                                <Globe className="w-5 h-5 text-slate-500 dark:text-slate-400" />
                               </div>
                               <span className="text-center">Transferencia / QR Express</span>
                             </button>
@@ -863,11 +921,11 @@ export default function App() {
                               onClick={() => setPersonalData({ ...personalData, paymentMethod: 'crypto' })}
                               className={`py-3 px-3 rounded-2xl font-bold text-xs border transition-all duration-300 flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
                                 personalData.paymentMethod === 'crypto'
-                                  ? 'border-emerald-600 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-500/10'
-                                  : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
+                                  ? 'border-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 ring-2 ring-emerald-500/10 dark:ring-emerald-500/20'
+                                  : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900'
                               }`}
                             >
-                              <Coins className="w-5 h-5 text-emerald-600" />
+                              <Coins className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                               <span className="text-center">Billeteras Cripto</span>
                             </button>
                           </div>
@@ -875,18 +933,42 @@ export default function App() {
                           {/* Contenedor del Formulario o QR */}
                           <div className="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-100 min-h-[220px] transition-all duration-300">
                             
-                            {/* OPCIÓN A: CUENTA CORRIENTE BANCARIA (TRANSFERENCIA DIRECTA) */}
+                            {/* OPCIÓN A: PASARELA EPAYCO Y TRANSFERENCIA DIRECTA */}
                             {personalData.paymentMethod === 'card' && (
                               <div className="space-y-4 animate-fadeIn">
-                                {/* Alerta de Mantenimiento de Tarjeta */}
-                                <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-xs text-amber-800">
-                                  <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                                  <div className="space-y-0.5">
-                                    <span className="font-extrabold text-amber-900 block">Procesador de Tarjetas en Mantenimiento Técnico</span>
-                                    <p className="text-amber-800 leading-normal text-[11px]">
-                                      Nuestra pasarela directa de cobro automático con tarjeta se encuentra en mantenimiento temporal para actualización de servidores de seguridad interbancaria. Puedes transferir directamente a nuestra **Cuenta Corriente** autorizada.
-                                    </p>
+                                {/* Pasarela de Pagos Activa ePayco */}
+                                <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-blue-100 dark:border-slate-800 shadow-sm text-center space-y-3">
+                                  <div className="flex items-center justify-center gap-1.5">
+                                    <span className="font-extrabold text-[#1565C0] dark:text-blue-400 text-xs uppercase tracking-widest">Pasarela Segura con ePayco</span>
+                                    <span className="px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 text-[9px] font-extrabold uppercase tracking-widest animate-pulse">Activo</span>
                                   </div>
+                                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-normal max-w-sm mx-auto">
+                                    Utiliza nuestra pasarela integrada segura para aportar de forma directa usando **Tarjetas de Crédito, Débito o PSE** a través de ePayco.
+                                  </p>
+                                  
+                                  {/* Botón / Contenedor oficial de ePayco */}
+                                  <div className="flex flex-col items-center justify-center gap-3 py-1">
+                                    <div id="miepayco" className="w-full max-w-[280px] flex justify-center min-h-[44px]">
+                                      <div className="text-slate-400 dark:text-slate-500 text-xs animate-pulse py-2">Cargando pasarela ePayco...</div>
+                                    </div>
+
+                                    {/* Botón de respaldo visible y elegante que siempre funciona */}
+                                    <a
+                                      href="https://donacionvnz2026.epayco.me/"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="py-2.5 px-4 rounded-xl bg-[#1565C0] hover:bg-[#0D47A1] text-white text-[11px] font-extrabold flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer w-full max-w-[250px] shadow-sm hover:shadow-md"
+                                    >
+                                      <ExternalLink className="w-3.5 h-3.5" />
+                                      <span>Pagar en línea con ePayco</span>
+                                    </a>
+                                  </div>
+                                </div>
+
+                                <div className="relative flex py-1 items-center">
+                                  <div className="flex-grow border-t border-slate-200"></div>
+                                  <span className="flex-shrink mx-3 text-[9px] text-slate-400 font-bold uppercase tracking-wider">O transferencia directa</span>
+                                  <div className="flex-grow border-t border-slate-200"></div>
                                 </div>
 
                                 <div className="space-y-2">
@@ -1035,6 +1117,16 @@ export default function App() {
                                         <Check className={`w-3.5 h-3.5 text-emerald-600 transition-transform ${copiedText === 'paypal' ? 'scale-110' : 'scale-0'}`} />
                                         <span>{copiedText === 'paypal' ? '¡Correo Copiado!' : 'Copiar Correo PayPal'}</span>
                                       </button>
+
+                                      <a
+                                        href="https://www.paypal.com/paypalme/donacionesvnz2026"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="py-2.5 px-3 rounded-xl bg-[#0079C1] hover:bg-[#005ea6] text-[11px] font-extrabold text-white flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer w-full shadow-sm hover:shadow-md"
+                                      >
+                                        <ExternalLink className="w-3.5 h-3.5" />
+                                        <span>Pagar con PayPal.me</span>
+                                      </a>
                                     </div>
                                   </div>
                                 )}
@@ -1101,22 +1193,10 @@ export default function App() {
                                       </p>
                                       <div className="p-2.5 bg-white rounded-xl border border-slate-200 text-[11px] space-y-1 text-left">
                                         <div className="flex justify-between items-center">
-                                          <span className="text-slate-400">Celular Nequi:</span>
-                                          <span className="font-mono font-bold text-slate-800">{QR_CONFIG.nequi.phoneNumber}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center pt-1 border-t border-slate-100">
                                           <span className="text-slate-400">Titular Cuenta:</span>
                                           <span className="font-semibold text-slate-700">{QR_CONFIG.nequi.accountName}</span>
                                         </div>
                                       </div>
-                                      <button
-                                        type="button"
-                                        onClick={() => copyToClipboard(QR_CONFIG.nequi.phoneNumber, 'nequi')}
-                                        className="py-2 px-3 rounded-xl border border-slate-200 hover:bg-slate-100 text-[11px] font-bold text-slate-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer w-full"
-                                      >
-                                        <Check className={`w-3.5 h-3.5 text-emerald-600 transition-transform ${copiedText === 'nequi' ? 'scale-110' : 'scale-0'}`} />
-                                        <span>{copiedText === 'nequi' ? '¡Número Copiado!' : 'Copiar Número Celular'}</span>
-                                      </button>
                                     </div>
                                   </div>
                                 )}
@@ -1186,10 +1266,6 @@ export default function App() {
                                         <div className="flex justify-between items-center">
                                           <span className="text-slate-400">Llave / Alias Bre-B:</span>
                                           <span className="font-mono font-bold text-slate-800">{QR_CONFIG.breb.aliasKey}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center pt-1 border-t border-slate-100">
-                                          <span className="text-slate-400">Tipo de Llave:</span>
-                                          <span className="font-semibold text-slate-700">{QR_CONFIG.breb.keyType}</span>
                                         </div>
                                       </div>
                                       <button
